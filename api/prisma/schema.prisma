@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Trader {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  sub          String        @unique
+  bankAccounts BankAccount[]
+  requests     Request[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model BankAccount {
+  id            String    @id @default(uuid())
+  name          String
+  accountNumber String    @unique
+  currency      Currency  @default(GHS)
+  traderId      String
+  owner         Trader    @relation(fields: [traderId], references: [id])
+  requests      Request[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Request {
+  id                 String            @id @default(uuid())
+  buyAmount          Int
+  status             RequestStatus     @default(PROCESSING)
+  sourceCurrency     Currency
+  receiptCurrency    Currency
+  receiptAmount      Int?
+  bankAccountId      String
+  rate               Float?
+  receiptBankAccount BankAccount       @relation(fields: [bankAccountId], references: [id])
+  traderId           String
+  trader             Trader            @relation(fields: [traderId], references: [id])
+  provider           LiquidityProvider
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+}
+
+enum Currency {
+  GHS
+  NGN
+  KES
+  UGX
+  ZAR
+  USD
+  EUR
+  GBP
+  CAD
+}
+
+enum RequestStatus {
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum LiquidityProvider {
+  EXNESS
+  AVATRADE
+  TRADENATION
+  OCTAFX
+  PEPPERSTONE
+  VANTAGEFX
+  XM
+  AXI
+  FXCM
+  FBS
+  XE
+  IC_MARKETS
+}
